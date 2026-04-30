@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizzaria Virtual | Pedido Online</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fa-solid fa-pizza-slice"></i>
+                <h1>Mega <span>Pizza</span></h1>
+            </div>
+            <div class="cart-icon" id="openCartBtn">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span class="cart-count" id="cartCountBadge">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h2>O sabor autêntico da Itália,<br>na sua casa.</h2>
+                <p>Massa artesanal, ingredientes frescos e assada no forno a lenha. Escolha sua favorita abaixo.</p>
+            </div>
+            <div class="hero-image">
+                <img src="assets/hero.png" alt="Pizza Deliciosa">
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Categories -->
+    <main class="container menu-section">
+        
+        <h3 class="section-title">Nossas Pizzas</h3>
+        <div class="products-grid" id="pizzas-grid">
+            <!-- Renderizado via JS -->
+        </div>
+
+        <h3 class="section-title">Bebidas Geladas</h3>
+        <div class="products-grid" id="drinks-grid">
+            <!-- Renderizado via JS -->
+        </div>
+
+    </main>
+
+    <!-- Cart Sidebar / Modal -->
+    <div class="cart-overlay" id="cartOverlay">
+        <div class="cart-sidebar" id="cartSidebar">
+            <div class="cart-header">
+                <h2>Seu Pedido</h2>
+                <button class="close-btn" id="closeCartBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="cart-body">
+                <div class="cart-items" id="cartItemsList">
+                    <!-- Itens do carrinho renderizados via JS -->
+                    <div class="empty-cart-msg" id="emptyCartMsg">
+                        <i class="fa-solid fa-basket-shopping"></i>
+                        <p>Seu carrinho está vazio.</p>
+                    </div>
+                </div>
+
+                <div class="cart-extras" id="cartExtras">
+                    <h4>Adicionais (Opção)</h4>
+                    <div class="extra-options">
+                        <label class="extra-item">
+                            <input type="checkbox" id="extra-borda" value="10.00" data-name="Borda Recheada (Catupiry)">
+                            <div class="extra-info">
+                                <span>Borda Recheada (Catupiry)</span>
+                                <strong>+ R$ 10,00</strong>
+                            </div>
+                        </label>
+                        <label class="extra-item">
+                            <input type="checkbox" id="extra-queijo" value="8.00" data-name="Queijo Extra">
+                            <div class="extra-info">
+                                <span>Queijo Extra</span>
+                                <strong>+ R$ 8,00</strong>
+                            </div>
+                        </label>
+                        <label class="extra-item">
+                            <input type="checkbox" id="extra-bacon" value="12.00" data-name="Bacon Extra">
+                            <div class="extra-info">
+                                <span>Bacon Extra</span>
+                                <strong>+ R$ 12,00</strong>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <strong id="cartTotalPrice">R$ 0,00</strong>
+                </div>
+                <div class="customer-info">
+                    <input type="text" id="customerName" placeholder="Seu Nome (Obrigatório)" required>
+                    <input type="text" id="customerAddress" placeholder="Endereço de Entrega (Opcional)">
+                </div>
+                <button class="checkout-btn" id="checkoutBtn">
+                    <i class="fa-brands fa-whatsapp"></i> Finalizar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">Item adicionado!</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
