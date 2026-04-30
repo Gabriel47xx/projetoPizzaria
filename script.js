@@ -11,6 +11,12 @@ const pizzas = [
     { id: 'p6', name: 'Portuguesa', desc: 'Mussarela, presunto, ovos, cebola, ervilha e azeitona.', price: 56.00, img: 'assets/default_pizza.png' }
 ];
 
+const sweetPizzas = [
+    { id: 'sp1', name: 'Chocolate com Morango', desc: 'Mussarela, chocolate ao leite derretido e morangos.', price: 55.00, img: 'assets/default_pizza.png' },
+    { id: 'sp2', name: 'Romeu e Julieta', desc: 'Mussarela, goiabada cascão e queijo minas.', price: 50.00, img: 'assets/default_pizza.png' },
+    { id: 'sp3', name: 'Banana com Canela', desc: 'Mussarela, banana fatiada, açúcar e canela.', price: 45.00, img: 'assets/default_pizza.png' }
+];
+
 const drinks = [
     { id: 'd1', name: 'Coca-Cola 2L', desc: 'Refrigerante gelado', price: 14.00, img: 'assets/default_drink.png' },
     { id: 'd2', name: 'Suco de Laranja 1L', desc: 'Natural, feito na hora', price: 12.00, img: 'assets/default_drink.png' },
@@ -23,6 +29,7 @@ let cart = [];
 
 // --- Elementos do DOM ---
 const pizzasGrid = document.getElementById('pizzas-grid');
+const sweetPizzasGrid = document.getElementById('sweet-pizzas-grid');
 const drinksGrid = document.getElementById('drinks-grid');
 const cartOverlay = document.getElementById('cartOverlay');
 const openCartBtn = document.getElementById('openCartBtn');
@@ -32,10 +39,8 @@ const emptyCartMsg = document.getElementById('emptyCartMsg');
 const cartCountBadge = document.getElementById('cartCountBadge');
 const cartTotalPrice = document.getElementById('cartTotalPrice');
 const checkoutBtn = document.getElementById('checkoutBtn');
+const continueShoppingBtn = document.getElementById('continueShoppingBtn');
 const toast = document.getElementById('toast');
-
-// Adicionais
-const extraCheckboxes = document.querySelectorAll('.extra-item input[type="checkbox"]');
 
 // Campos Cliente
 const customerNameInput = document.getElementById('customerName');
@@ -55,16 +60,40 @@ const showToast = (message) => {
 };
 
 // --- Renderização ---
-const createProductCard = (product) => {
+const createProductCard = (product, type) => {
+    let extrasHtml = '';
+    let priceDisplay = `<span class="card-price">${formatPrice(product.price)}</span>`;
+
+    if (type === 'pizza' || type === 'sweetPizza') {
+        extrasHtml = `
+            <div class="card-extras">
+                <span class="extras-title">Tamanho:</span>
+                <select id="size-${product.id}" class="size-select">
+                    <option value="P" data-price="${(product.price - 10).toFixed(2)}">P - Pequena (-R$ 10)</option>
+                    <option value="M" data-price="${(product.price - 5).toFixed(2)}">M - Média (-R$ 5)</option>
+                    <option value="G" data-price="${product.price.toFixed(2)}" selected>G - Grande (Valor Base)</option>
+                    <option value="GG" data-price="${(product.price + 10).toFixed(2)}">GG - Família (+R$ 10)</option>
+                </select>
+                
+                <span class="extras-title" style="margin-top: 10px;">Adicionais:</span>
+                <label><input type="checkbox" id="extra-borda-${product.id}" value="10.00" data-name="Borda Recheada"> Borda (+R$10)</label>
+                <label><input type="checkbox" id="extra-queijo-${product.id}" value="8.00" data-name="Queijo Extra"> Queijo (+R$8)</label>
+            </div>
+        `;
+        priceDisplay = ''; // Price is selected inside the dropdown or handled dynamically. But let's show base price:
+        priceDisplay = `<span class="card-price" style="font-size: 1.1rem;">A partir de ${formatPrice(product.price - 10)}</span>`;
+    }
+
     return `
         <div class="card">
             <img src="${product.img}" alt="${product.name}" class="card-img" onerror="this.src='https://via.placeholder.com/300x200/1c1f26/ff6b35?text=${product.name.replace(' ', '+')}'">
             <div class="card-content">
                 <h4 class="card-title">${product.name}</h4>
                 <p class="card-desc">${product.desc}</p>
+                ${extrasHtml}
                 <div class="card-footer">
-                    <span class="card-price">${formatPrice(product.price)}</span>
-                    <button class="btn-add" onclick="addToCart('${product.id}')">
+                    ${priceDisplay}
+                    <button class="btn-add" onclick="addToCart('${product.id}', '${type}')">
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
@@ -74,54 +103,78 @@ const createProductCard = (product) => {
 };
 
 const renderMenu = () => {
-    pizzasGrid.innerHTML = pizzas.map(createProductCard).join('');
-    drinksGrid.innerHTML = drinks.map(createProductCard).join('');
+    pizzasGrid.innerHTML = pizzas.map(p => createProductCard(p, 'pizza')).join('');
+    sweetPizzasGrid.innerHTML = sweetPizzas.map(p => createProductCard(p, 'sweetPizza')).join('');
+    drinksGrid.innerHTML = drinks.map(d => createProductCard(d, 'drink')).join('');
 };
 
 // --- Lógica do Carrinho ---
 const getProductById = (id) => {
-    return pizzas.find(p => p.id === id) || drinks.find(d => d.id === id);
+    return pizzas.find(p => p.id === id) || sweetPizzas.find(p => p.id === id) || drinks.find(d => d.id === id);
 };
 
-const addToCart = (id) => {
+const addToCart = (id, type) => {
     const product = getProductById(id);
-    const existingItem = cart.find(item => item.id === id);
+    let selectedExtras = [];
+    let extrasTotal = 0;
+    let finalPrice = product.price;
+    let selectedSize = '';
+    let sizeLabel = '';
+
+    if (type === 'pizza' || type === 'sweetPizza') {
+        const sizeSelect = document.getElementById(`size-${id}`);
+        if (sizeSelect) {
+            const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+            selectedSize = selectedOption.value;
+            finalPrice = parseFloat(selectedOption.dataset.price);
+            sizeLabel = ` (${selectedSize})`;
+        }
+
+        const bordaCb = document.getElementById(`extra-borda-${id}`);
+        const queijoCb = document.getElementById(`extra-queijo-${id}`);
+        
+        if (bordaCb && bordaCb.checked) {
+            selectedExtras.push({ name: bordaCb.dataset.name, price: parseFloat(bordaCb.value) });
+            extrasTotal += parseFloat(bordaCb.value);
+            bordaCb.checked = false; // Reset after adding
+        }
+        if (queijoCb && queijoCb.checked) {
+            selectedExtras.push({ name: queijoCb.dataset.name, price: parseFloat(queijoCb.value) });
+            extrasTotal += parseFloat(queijoCb.value);
+            queijoCb.checked = false; // Reset after adding
+        }
+    }
+
+    const extrasKey = selectedExtras.map(e => e.name).sort().join('-');
+    const cartItemId = `${id}${selectedSize ? '-' + selectedSize : ''}${extrasKey ? '-' + extrasKey : ''}`;
+
+    const existingItem = cart.find(item => item.cartItemId === cartItemId);
 
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        cart.push({ ...product, quantity: 1 });
+        cart.push({ ...product, price: finalPrice, sizeLabel, cartItemId, quantity: 1, selectedExtras, extrasTotal });
     }
 
     updateCartUI();
-    showToast(`${product.name} adicionado!`);
+    showToast(`${product.name}${sizeLabel} adicionado!`);
 };
 
-const removeFromCart = (id) => {
-    cart = cart.filter(item => item.id !== id);
+const removeFromCart = (cartItemId) => {
+    cart = cart.filter(item => item.cartItemId !== cartItemId);
     updateCartUI();
 };
 
-const updateQuantity = (id, delta) => {
-    const item = cart.find(item => item.id === id);
+const updateQuantity = (cartItemId, delta) => {
+    const item = cart.find(item => item.cartItemId === cartItemId);
     if (item) {
         item.quantity += delta;
         if (item.quantity <= 0) {
-            removeFromCart(id);
+            removeFromCart(cartItemId);
         } else {
             updateCartUI();
         }
     }
-};
-
-const getExtrasTotal = () => {
-    let total = 0;
-    extraCheckboxes.forEach(cb => {
-        if (cb.checked) {
-            total += parseFloat(cb.value);
-        }
-    });
-    return total;
 };
 
 const updateCartUI = () => {
@@ -143,23 +196,23 @@ const updateCartUI = () => {
             <div class="cart-item">
                 <img src="${item.img}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/60/1c1f26/ff6b35?text=Img'">
                 <div class="cart-item-info">
-                    <div class="cart-item-title">${item.name}</div>
-                    <div class="cart-item-price">${formatPrice(item.price)}</div>
+                    <div class="cart-item-title">${item.name}${item.sizeLabel || ''}</div>
+                    ${item.selectedExtras && item.selectedExtras.length > 0 ? 
+                      `<div class="cart-item-extras" style="font-size: 0.8rem; color: var(--text-secondary);">Com: ${item.selectedExtras.map(e => e.name).join(', ')}</div>` : ''}
+                    <div class="cart-item-price">${formatPrice((item.price + (item.extrasTotal || 0)))}</div>
                 </div>
                 <div class="cart-item-actions">
-                    <button class="qty-btn" onclick="updateQuantity('${item.id}', -1)">-</button>
+                    <button class="qty-btn" onclick="updateQuantity('${item.cartItemId}', -1)">-</button>
                     <span>${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateQuantity('${item.id}', 1)">+</button>
-                    <button class="remove-btn" onclick="removeFromCart('${item.id}')"><i class="fa-solid fa-trash"></i></button>
+                    <button class="qty-btn" onclick="updateQuantity('${item.cartItemId}', 1)">+</button>
+                    <button class="remove-btn" onclick="removeFromCart('${item.cartItemId}')"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         `).join('');
     }
 
     // Calcula e Atualiza Total
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const extrasTotal = getExtrasTotal();
-    const finalTotal = subtotal > 0 ? subtotal + extrasTotal : 0; // Só cobra extras se houver itens no carrinho
+    const finalTotal = cart.reduce((sum, item) => sum + ((item.price + (item.extrasTotal || 0)) * item.quantity), 0);
 
     cartTotalPrice.textContent = formatPrice(finalTotal);
 };
@@ -183,19 +236,12 @@ const generateWhatsAppLink = () => {
     message += `\n*Itens do Pedido:*\n`;
 
     cart.forEach(item => {
-        message += `- ${item.quantity}x ${item.name} (${formatPrice(item.price * item.quantity)})\n`;
+        let itemExtrasText = item.selectedExtras && item.selectedExtras.length > 0 ? 
+            ` (Com: ${item.selectedExtras.map(e => e.name).join(', ')})` : '';
+        message += `- ${item.quantity}x ${item.name}${item.sizeLabel || ''}${itemExtrasText} (${formatPrice((item.price + (item.extrasTotal || 0)) * item.quantity)})\n`;
     });
 
-    const selectedExtras = Array.from(extraCheckboxes).filter(cb => cb.checked);
-    if (selectedExtras.length > 0) {
-        message += `\n*Adicionais:*\n`;
-        selectedExtras.forEach(cb => {
-            message += `- ${cb.dataset.name} (+${formatPrice(parseFloat(cb.value))})\n`;
-        });
-    }
-
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const finalTotal = subtotal + getExtrasTotal();
+    const finalTotal = cart.reduce((sum, item) => sum + ((item.price + (item.extrasTotal || 0)) * item.quantity), 0);
 
     message += `\n*Total a pagar:* ${formatPrice(finalTotal)}\n`;
     message += `\nObrigado pela preferência!`;
@@ -209,13 +255,12 @@ const generateWhatsAppLink = () => {
 // --- Event Listeners ---
 openCartBtn.addEventListener('click', () => cartOverlay.classList.add('active'));
 closeCartBtn.addEventListener('click', () => cartOverlay.classList.remove('active'));
+continueShoppingBtn.addEventListener('click', () => cartOverlay.classList.remove('active'));
 cartOverlay.addEventListener('click', (e) => {
     if (e.target === cartOverlay) cartOverlay.classList.remove('active');
 });
 
-extraCheckboxes.forEach(cb => {
-    cb.addEventListener('change', updateCartUI);
-});
+
 
 checkoutBtn.addEventListener('click', generateWhatsAppLink);
 

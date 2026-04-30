@@ -26,6 +26,15 @@
         </div>
     </header>
 
+    <!-- Navigation Bar -->
+    <nav class="category-nav">
+        <div class="container nav-content">
+            <a href="#pizzas-salgadas" class="nav-link">Pizzas Salgadas</a>
+            <a href="#pizzas-doces" class="nav-link">Pizzas Doces</a>
+            <a href="#bebidas" class="nav-link">Bebidas</a>
+        </div>
+    </nav>
+
     <!-- Hero Section -->
     <section class="hero">
         <div class="container hero-content">
@@ -42,12 +51,17 @@
     <!-- Menu Categories -->
     <main class="container menu-section">
         
-        <h3 class="section-title">Nossas Pizzas</h3>
+        <h3 class="section-title" id="pizzas-salgadas">Nossas Pizzas</h3>
         <div class="products-grid" id="pizzas-grid">
             <!-- Renderizado via JS -->
         </div>
 
-        <h3 class="section-title">Bebidas Geladas</h3>
+        <h3 class="section-title" id="pizzas-doces">Pizzas Doces</h3>
+        <div class="products-grid" id="sweet-pizzas-grid">
+            <!-- Renderizado via JS -->
+        </div>
+
+        <h3 class="section-title" id="bebidas">Bebidas Geladas</h3>
         <div class="products-grid" id="drinks-grid">
             <!-- Renderizado via JS -->
         </div>
@@ -70,33 +84,6 @@
                         <p>Seu carrinho está vazio.</p>
                     </div>
                 </div>
-
-                <div class="cart-extras" id="cartExtras">
-                    <h4>Adicionais (Opção)</h4>
-                    <div class="extra-options">
-                        <label class="extra-item">
-                            <input type="checkbox" id="extra-borda" value="10.00" data-name="Borda Recheada (Catupiry)">
-                            <div class="extra-info">
-                                <span>Borda Recheada (Catupiry)</span>
-                                <strong>+ R$ 10,00</strong>
-                            </div>
-                        </label>
-                        <label class="extra-item">
-                            <input type="checkbox" id="extra-queijo" value="8.00" data-name="Queijo Extra">
-                            <div class="extra-info">
-                                <span>Queijo Extra</span>
-                                <strong>+ R$ 8,00</strong>
-                            </div>
-                        </label>
-                        <label class="extra-item">
-                            <input type="checkbox" id="extra-bacon" value="12.00" data-name="Bacon Extra">
-                            <div class="extra-info">
-                                <span>Bacon Extra</span>
-                                <strong>+ R$ 12,00</strong>
-                            </div>
-                        </label>
-                    </div>
-                </div>
             </div>
 
             <div class="cart-footer">
@@ -108,6 +95,9 @@
                     <input type="text" id="customerName" placeholder="Seu Nome (Obrigatório)" required>
                     <input type="text" id="customerAddress" placeholder="Endereço de Entrega (Opcional)">
                 </div>
+                <button class="checkout-btn continue-btn" id="continueShoppingBtn">
+                    <i class="fa-solid fa-arrow-left"></i> Voltar aos Pedidos
+                </button>
                 <button class="checkout-btn" id="checkoutBtn">
                     <i class="fa-brands fa-whatsapp"></i> Finalizar Pedido
                 </button>
