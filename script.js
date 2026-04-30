@@ -68,11 +68,11 @@ const createProductCard = (product, type) => {
         extrasHtml = `
             <div class="card-extras">
                 <span class="extras-title">Tamanho:</span>
-                <select id="size-${product.id}" class="size-select">
-                    <option value="P" data-price="${(product.price - 10).toFixed(2)}">P - Pequena (-R$ 10)</option>
-                    <option value="M" data-price="${(product.price - 5).toFixed(2)}">M - Média (-R$ 5)</option>
-                    <option value="G" data-price="${product.price.toFixed(2)}" selected>G - Grande (Valor Base)</option>
-                    <option value="GG" data-price="${(product.price + 10).toFixed(2)}">GG - Família (+R$ 10)</option>
+                <select id="size-${product.id}" class="size-select" onchange="updatePriceDisplay('${product.id}')">
+                    <option value="P" data-price="${(product.price - 10).toFixed(2)}">P - Pequena (${formatPrice(product.price - 10)})</option>
+                    <option value="M" data-price="${(product.price - 5).toFixed(2)}">M - Média (${formatPrice(product.price - 5)})</option>
+                    <option value="G" data-price="${product.price.toFixed(2)}" selected>G - Grande (${formatPrice(product.price)})</option>
+                    <option value="GG" data-price="${(product.price + 10).toFixed(2)}">GG - Família (${formatPrice(product.price + 10)})</option>
                 </select>
                 
                 <span class="extras-title" style="margin-top: 10px;">Adicionais:</span>
@@ -80,8 +80,7 @@ const createProductCard = (product, type) => {
                 <label><input type="checkbox" id="extra-queijo-${product.id}" value="8.00" data-name="Queijo Extra"> Queijo (+R$8)</label>
             </div>
         `;
-        priceDisplay = ''; // Price is selected inside the dropdown or handled dynamically. But let's show base price:
-        priceDisplay = `<span class="card-price" style="font-size: 1.1rem;">A partir de ${formatPrice(product.price - 10)}</span>`;
+        priceDisplay = `<span class="card-price" id="price-display-${product.id}" style="font-size: 1.1rem;">${formatPrice(product.price)}</span>`;
     }
 
     return `
@@ -100,6 +99,16 @@ const createProductCard = (product, type) => {
             </div>
         </div>
     `;
+};
+
+const updatePriceDisplay = (id) => {
+    const sizeSelect = document.getElementById(`size-${id}`);
+    const priceDisplay = document.getElementById(`price-display-${id}`);
+    if (sizeSelect && priceDisplay) {
+        const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+        const price = parseFloat(selectedOption.dataset.price);
+        priceDisplay.textContent = formatPrice(price);
+    }
 };
 
 const renderMenu = () => {
