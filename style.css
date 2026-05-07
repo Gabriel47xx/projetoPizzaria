@@ -335,6 +335,28 @@ body {
     color: var(--accent-orange);
 }
 
+.btn-half {
+    background: transparent;
+    color: var(--accent-orange);
+    border: 1px solid var(--accent-orange);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.btn-half:hover {
+    background: var(--accent-orange);
+    color: white;
+    transform: scale(1.1);
+}
+
 .btn-add {
     background: transparent;
     color: var(--accent-orange);

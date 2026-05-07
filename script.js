@@ -60,11 +60,33 @@ const showToast = (message) => {
 };
 
 // --- Renderização ---
+const toggleHalfSelect = (id) => {
+    const container = document.getElementById(`half-select-container-${id}`);
+    if (container) {
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+            const select = document.getElementById(`half-select-${id}`);
+            if (select) select.value = '';
+        }
+    }
+};
+
 const createProductCard = (product, type) => {
     let extrasHtml = '';
     let priceDisplay = `<span class="card-price">${formatPrice(product.price)}</span>`;
+    let footerButtons = `
+        <button class="btn-add" onclick="addToCart('${product.id}', '${type}')">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+    `;
+    let halfSelectHtml = '';
 
     if (type === 'pizza' || type === 'sweetPizza') {
+        const otherPizzas = (type === 'pizza' ? pizzas : sweetPizzas).filter(p => p.id !== product.id);
+        const options = otherPizzas.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        
         extrasHtml = `
             <div class="card-extras">
                 <span class="extras-title">Tamanho:</span>
@@ -81,6 +103,27 @@ const createProductCard = (product, type) => {
             </div>
         `;
         priceDisplay = `<span class="card-price" id="price-display-${product.id}" style="font-size: 1.1rem;">${formatPrice(product.price)}</span>`;
+        
+        halfSelectHtml = `
+            <div id="half-select-container-${product.id}" style="display: none; margin-bottom: 15px; background: var(--bg-dark); padding: 10px; border-radius: 8px;">
+                <span class="extras-title">2º Sabor (Meio a Meio):</span>
+                <select id="half-select-${product.id}" class="size-select" style="margin-bottom: 0; margin-top: 5px;">
+                    <option value="">Nenhum</option>
+                    ${options}
+                </select>
+            </div>
+        `;
+
+        footerButtons = `
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-half" onclick="toggleHalfSelect('${product.id}')" title="Meio a Meio">
+                    1/2
+                </button>
+                <button class="btn-add" onclick="addToCart('${product.id}', '${type}')">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        `;
     }
 
     return `
@@ -90,11 +133,10 @@ const createProductCard = (product, type) => {
                 <h4 class="card-title">${product.name}</h4>
                 <p class="card-desc">${product.desc}</p>
                 ${extrasHtml}
+                ${halfSelectHtml}
                 <div class="card-footer">
                     ${priceDisplay}
-                    <button class="btn-add" onclick="addToCart('${product.id}', '${type}')">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
+                    ${footerButtons}
                 </div>
             </div>
         </div>
@@ -129,6 +171,8 @@ const addToCart = (id, type) => {
     let finalPrice = product.price;
     let selectedSize = '';
     let sizeLabel = '';
+    let displayName = product.name;
+    let secondFlavorId = '';
 
     if (type === 'pizza' || type === 'sweetPizza') {
         const sizeSelect = document.getElementById(`size-${id}`);
@@ -137,6 +181,18 @@ const addToCart = (id, type) => {
             selectedSize = selectedOption.value;
             finalPrice = parseFloat(selectedOption.dataset.price);
             sizeLabel = ` (${selectedSize})`;
+        }
+        
+        const halfSelect = document.getElementById(`half-select-${id}`);
+        if (halfSelect && halfSelect.value) {
+            const secondProduct = getProductById(halfSelect.value);
+            if (secondProduct) {
+                secondFlavorId = secondProduct.id;
+                displayName = `1/2 ${product.name} e 1/2 ${secondProduct.name}`;
+                const sizeOffset = finalPrice - product.price;
+                // Preço da pizza meio a meio é baseado na mais cara
+                finalPrice = Math.max(product.price, secondProduct.price) + sizeOffset;
+            }
         }
 
         const bordaCb = document.getElementById(`extra-borda-${id}`);
@@ -155,18 +211,24 @@ const addToCart = (id, type) => {
     }
 
     const extrasKey = selectedExtras.map(e => e.name).sort().join('-');
-    const cartItemId = `${id}${selectedSize ? '-' + selectedSize : ''}${extrasKey ? '-' + extrasKey : ''}`;
+    const cartItemId = `${id}${secondFlavorId ? '-' + secondFlavorId : ''}${selectedSize ? '-' + selectedSize : ''}${extrasKey ? '-' + extrasKey : ''}`;
 
     const existingItem = cart.find(item => item.cartItemId === cartItemId);
 
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        cart.push({ ...product, price: finalPrice, sizeLabel, cartItemId, quantity: 1, selectedExtras, extrasTotal });
+        cart.push({ ...product, name: displayName, price: finalPrice, sizeLabel, cartItemId, quantity: 1, selectedExtras, extrasTotal });
     }
 
+    // Reset half select se estiver aberto
+    const halfSelectContainer = document.getElementById(`half-select-container-${id}`);
+    const halfSelectElement = document.getElementById(`half-select-${id}`);
+    if (halfSelectContainer) halfSelectContainer.style.display = 'none';
+    if (halfSelectElement) halfSelectElement.value = '';
+
     updateCartUI();
-    showToast(`${product.name}${sizeLabel} adicionado!`);
+    showToast(`${displayName}${sizeLabel} adicionado!`);
 };
 
 const removeFromCart = (cartItemId) => {
