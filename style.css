@@ -634,6 +634,7 @@ body {
     justify-content: center;
     gap: 10px;
     transition: var(--transition);
+    margin-bottom: 30px;
 }
 
 .checkout-btn:hover {
